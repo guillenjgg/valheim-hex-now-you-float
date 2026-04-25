@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using System.Collections.Generic;
@@ -14,6 +15,12 @@ namespace NowYouFloat
         public const string PluginName = "Now You Float";
         public const string PluginVersion = "1.0.0";
 
+        private static ConfigEntry<string> _allowedExactPrefabsConfig;
+        private static ConfigEntry<string> _allowedNameContainsConfig;
+
+        internal static HashSet<string> AllowedExactPrefabs { get; private set; }
+        internal static HashSet<string> AllowedNameContains { get; private set; }
+
         internal static Plugin Instance { get; private set; }
         internal static Harmony HarmonyInstance { get; private set; }
         internal static ManualLogSource Log { get; private set; }
@@ -23,10 +30,29 @@ namespace NowYouFloat
             Instance = this;
             Log = Logger;
 
+            _allowedExactPrefabsConfig = Config.Bind(
+                "Prefabs",
+                "AllowedExactPrefabs",
+                "Copper,CopperOre,IronNails,BronzeNails,IronScrap,Iron,IronOre,BlackMetal,BlackMetalScrap,Silver,SilverOre,Tin,TinOre,SurtlingCore,DeerHide,CeramicPlate",
+                "Comma-separated exact prefab names that should float."
+                );
+
+            _allowedNameContainsConfig = Config.Bind(
+                "Prefabs",
+                "AllowedNameContains",
+                "Trophy",
+                "Comma-separated text fragments. Any prefab name containing one of these values will float. Example: Trophy,Ore"
+                );
+
+            ReloadPrefabConfig();
+
+            _allowedExactPrefabsConfig.SettingChanged += (_, __) => ReloadPrefabConfig();
+            _allowedNameContainsConfig.SettingChanged += (_, __) => ReloadPrefabConfig();
+
             HarmonyInstance = new Harmony(PluginGuid);
             HarmonyInstance.PatchAll();
 
-            Log.LogInfo($"[{PluginName}] loaded (v{PluginVersion}).");
+            Log.LogInfo($"loaded (v{PluginVersion}).");
         }
 
         private void OnDestroy()
@@ -35,31 +61,45 @@ namespace NowYouFloat
             HarmonyInstance?.UnpatchSelf();
             Log.LogInfo($"[{PluginName}] unloaded.");
         }
+
+        private static void ReloadPrefabConfig()
+        {
+            AllowedExactPrefabs = ParseConfigList(_allowedExactPrefabsConfig.Value);
+            AllowedNameContains = ParseConfigList(_allowedNameContainsConfig.Value);
+
+            Log?.LogInfo($"Reloaded prefab config. Exact: {AllowedExactPrefabs.Count}, Contains: {AllowedNameContains.Count}");
+        }
+
+        private static HashSet<string> ParseConfigList(string value)
+        {
+            var result = new HashSet<string>();
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return result;
+            }
+
+            string[] values = value.Split(',');
+
+            foreach (string item in values)
+            {
+                string trimmed = item.Trim();
+
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                {
+                    result.Add(trimmed);
+                }
+            }
+
+            return result;
+        }
     }
 
     [HarmonyPatch(typeof(ItemDrop), nameof(ItemDrop.Awake))]
     public static class ItemDropPatchAwake
     {
-        private static readonly string TrophySubstring = "Trophy";
-
-        private static readonly HashSet<string> AllowedExactPrefabs = new HashSet<string>
-        {
-            "Copper",
-            "CopperOre",
-            "IronNails",
-            "IronScrap",
-            "Iron",
-            "IronOre",
-            "BlackMetal",
-            "BlackMetalScrap",
-            "Silver",
-            "SilverOre",
-            "Tin",
-            "TinOre",
-        };
-
         private static readonly FieldInfo FloatingField = AccessTools.Field(typeof(ItemDrop), "m_floating");
-
+        
         private static Floating _referenceFloating;
 
         [HarmonyPostfix]
@@ -126,14 +166,20 @@ namespace NowYouFloat
                 return false;
             }
 
-            if (AllowedExactPrefabs.Contains(prefabName))
+            if (Plugin.AllowedExactPrefabs != null && Plugin.AllowedExactPrefabs.Contains(prefabName))
             {
                 return true;
             }
 
-            if (prefabName.Contains(TrophySubstring))
+            if(Plugin.AllowedNameContains != null)
             {
-                return true;
+                foreach (var allowedSubstring in Plugin.AllowedNameContains)
+                {
+                    if (prefabName.Contains(allowedSubstring))
+                    {
+                        return true;
+                    }
+                }
             }
 
             return false;
