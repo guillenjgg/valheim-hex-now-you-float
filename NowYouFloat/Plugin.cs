@@ -12,8 +12,8 @@ namespace NowYouFloat
     public class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "hex.nowyoufloat";
-        public const string PluginName = "Now You Float";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginName = "NowYouFloat";
+        public const string PluginVersion = "1.0.1";
 
         private static ConfigEntry<string> _allowedExactPrefabsConfig;
         private static ConfigEntry<string> _allowedNameContainsConfig;
@@ -33,7 +33,7 @@ namespace NowYouFloat
             _allowedExactPrefabsConfig = Config.Bind(
                 "Prefabs",
                 "AllowedExactPrefabs",
-                "Copper,CopperOre,IronNails,BronzeNails,IronScrap,Iron,IronOre,BlackMetal,BlackMetalScrap,Silver,SilverOre,Tin,TinOre,SurtlingCore,DeerHide,CeramicPlate",
+                "Copper,CopperOre,IronNails,BronzeNails,IronScrap,Iron,IronOre,BlackMetal,BlackMetalScrap,Silver,SilverOre,Tin,TinOre,SurtlingCore,DeerHide,CeramicPlate,Bronze",
                 "Comma-separated exact prefab names that should float."
                 );
 
@@ -41,7 +41,7 @@ namespace NowYouFloat
                 "Prefabs",
                 "AllowedNameContains",
                 "Trophy",
-                "Comma-separated text fragments. Any prefab name containing one of these values will float. Example: Trophy,Ore"
+                "Comma-separated case-insensitive text fragments. Any prefab name containing one of these values will float. Example: Trophy,Ore"
                 );
 
             ReloadPrefabConfig();
@@ -52,27 +52,39 @@ namespace NowYouFloat
             HarmonyInstance = new Harmony(PluginGuid);
             HarmonyInstance.PatchAll();
 
-            Log.LogInfo($"loaded (v{PluginVersion}).");
+            Log.LogInfo($"{PluginName} v{PluginVersion} loaded.");
         }
 
         private void OnDestroy()
         {
-            Instance = null;
+            Log.LogInfo($"{PluginName} v{PluginVersion} unloaded.");
+
             HarmonyInstance?.UnpatchSelf();
-            Log.LogInfo($"[{PluginName}] unloaded.");
+            HarmonyInstance = null;
+            Instance = null;
         }
 
         private static void ReloadPrefabConfig()
         {
             AllowedExactPrefabs = ParseConfigList(_allowedExactPrefabsConfig.Value);
-            AllowedNameContains = ParseConfigList(_allowedNameContainsConfig.Value);
+            AllowedNameContains = ParseConfigListIgnoreCase(_allowedNameContainsConfig.Value);
 
             Log?.LogInfo($"Reloaded prefab config. Exact: {AllowedExactPrefabs.Count}, Contains: {AllowedNameContains.Count}");
         }
 
         private static HashSet<string> ParseConfigList(string value)
         {
-            var result = new HashSet<string>();
+            return ParseConfigList(value, null);
+        }
+
+        private static HashSet<string> ParseConfigListIgnoreCase(string value)
+        {
+            return ParseConfigList(value, System.StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static HashSet<string> ParseConfigList(string value, IEqualityComparer<string> comparer)
+        {
+            var result = (comparer == null ? new HashSet<string>() : new HashSet<string>(comparer));
 
             if (string.IsNullOrWhiteSpace(value))
             {
@@ -126,6 +138,7 @@ namespace NowYouFloat
             }
 
             var existingFloating = FloatingField.GetValue(__instance) as Floating;
+            
             if (existingFloating != null)
             {
                 return;
@@ -139,13 +152,14 @@ namespace NowYouFloat
             }
 
             Floating floating = __instance.GetComponent<Floating>();
+            
             if (floating == null)
             {
                 floating = __instance.gameObject.AddComponent<Floating>();
             }
 
-            // copy floating values from wood if possible, to avoid hardcoding values in the mod and to allow for better compatibility with other mods that may change floating values on wood
-            Floating reference = GetWoodFLoatingReference();
+            // Copy floating values from Wood when possible instead of hardcoding physics values.
+            Floating reference = GetWoodFloatingReference();
 
             if (reference != null)
             {
@@ -171,11 +185,11 @@ namespace NowYouFloat
                 return true;
             }
 
-            if(Plugin.AllowedNameContains != null)
+            if (Plugin.AllowedNameContains != null)
             {
                 foreach (var allowedSubstring in Plugin.AllowedNameContains)
                 {
-                    if (prefabName.Contains(allowedSubstring))
+                    if (prefabName.IndexOf(allowedSubstring, System.StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         return true;
                     }
@@ -185,7 +199,7 @@ namespace NowYouFloat
             return false;
         }
 
-        private static Floating GetWoodFLoatingReference()
+        private static Floating GetWoodFloatingReference()
         {
             if (_referenceFloating != null)
             {
