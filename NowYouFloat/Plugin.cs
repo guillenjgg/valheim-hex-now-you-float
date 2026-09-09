@@ -13,7 +13,7 @@ namespace NowYouFloat
     {
         public const string PluginGuid = "hex.nowyoufloat";
         public const string PluginName = "NowYouFloat";
-        public const string PluginVersion = "1.0.1";
+        public const string PluginVersion = "1.0.2";
 
         private static ConfigEntry<string> _allowedExactPrefabsConfig;
         private static ConfigEntry<string> _allowedNameContainsConfig;
@@ -49,8 +49,9 @@ namespace NowYouFloat
             _allowedExactPrefabsConfig.SettingChanged += (_, __) => ReloadPrefabConfig();
             _allowedNameContainsConfig.SettingChanged += (_, __) => ReloadPrefabConfig();
 
+            Assembly assembly = Assembly.GetExecutingAssembly();
             HarmonyInstance = new Harmony(PluginGuid);
-            HarmonyInstance.PatchAll();
+            HarmonyInstance.PatchAll(assembly);
 
             Log.LogInfo($"{PluginName} v{PluginVersion} loaded.");
         }
