@@ -13,20 +13,16 @@ internal static class ItemDropPatchAwake
     [HarmonyPostfix]
     private static void Postfix(ItemDrop __instance)
     {
-        if (__instance == null)
+        if (!ConfigService.IsModEnabled)
         {
             return;
         }
 
-        if (__instance.m_itemData == null)
+        if (__instance == null || __instance.m_itemData == null || __instance.m_itemData.m_dropPrefab == null)
         {
             return;
         }
 
-        if (__instance.m_itemData.m_dropPrefab == null)
-        {
-            return;
-        }
 
         if (FloatingField == null)
         {
