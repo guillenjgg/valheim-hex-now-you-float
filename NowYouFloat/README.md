@@ -78,9 +78,8 @@ Example:
 BepInEx/plugins/NowYouFloat/NowYouFloat.dll
 ```
 
----
+## Support and Feedback
+https://discord.gg/wU2FXD94v4
 
-## Multiplayer
-
-- Primarily tested on a dedicated server with the mod installed client-side only
-- Multiplayer compatibility with other players and mod combinations has not been extensively tested
+## Source Code
+https://github.com/guillenjgg/valheim-hex-now-you-float

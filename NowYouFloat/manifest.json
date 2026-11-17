@@ -1,9 +1,9 @@
 {
   "name": "NowYouFloat",
-  "version_number": "1.0.2",
-  "website_url": "https://github.com/guillenjgg/valheim-hex-now-you-float",
+  "version_number": "1.0.3",
+  "website_url": "",
   "description": "Makes metal ores, bars, and trophies float in water in Valheim.",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2333"
+    "denikson-BepInExPack_Valheim-5.4.2360"
   ]
 }
