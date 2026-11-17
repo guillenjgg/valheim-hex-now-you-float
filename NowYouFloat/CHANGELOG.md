@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.0.3
+
+### Changed
+- Logo
+- Moved configuration integration to it's own service
+- Compiled against Valheim `v1.0.21`
+- Updated BepInExPack to `v5.4.2360`
+
 ## v1.0.2
 
 ### Added

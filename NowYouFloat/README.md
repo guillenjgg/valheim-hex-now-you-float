@@ -1,25 +1,22 @@
 # NowYouFloat
 
-Makes supported dropped items float on water in Valheim.
+Items that normally sink can now float. Follow the configuration instructions on how to add your own prefabs.
+
+For example, say you wanted to make `Bloodgold` float. You would add the items in game prefab name `Gold` to the `AllowedExactPrefabs` configuration setting.
+
+Note, the prefab name is not the same as the item name you may see in game. You can refer to the Valheim wiki to get most prefab names you need.
 
 ## Features
 
 - Supports ores, metals, trophies, and other configurable prefabs
 - Configure additional prefab names through the config file or the official BepInEx Configuration Manager
-- Simple quality-of-life mod
 
-![Floating item example](images/float.png)
-
-![Configuration example](images/config.png)
-
----
+![Config](https://raw.githubusercontent.com/guillenjgg/valheim-hex-mod-images/main/hexnowyoufloat/nowyoufloat_1.png)
 
 ## Compatibility
 
-- NowYouFloat adds a `Floating` component to configured dropped item prefabs that normally sink.
+- Adds a `Floating` component to any prefab that is configured in the BepInEx configuration.
 - Mods that modify the same dropped item prefabs or Floating behavior may be incompatible.
-
----
 
 ## Configuration
 
@@ -37,7 +34,9 @@ Example configuration:
 ## Enable or disable the mod
 # Setting type: Boolean
 # Default value: true
-Enabled = true
+IsModEnabled = true
+
+[Prefabs]
 
 ## Exact prefab names that should float
 # Comma-separated list
@@ -48,13 +47,9 @@ AllowedExactPrefabs = Copper,CopperOre,IronNails,BronzeNails,IronScrap,Iron,Iron
 AllowedNameContains = Trophy
 ```
 
----
-
 ## Requirements
 
-- denikson-BepInExPack_Valheim-5.4.2333
-
----
+- BepInExPack
 
 ## Installation
 
@@ -78,9 +73,8 @@ Example:
 BepInEx/plugins/NowYouFloat/NowYouFloat.dll
 ```
 
----
+## Support and Feedback
+https://discord.gg/wU2FXD94v4
 
-## Multiplayer
-
-- Primarily tested on a dedicated server with the mod installed client-side only
-- Multiplayer compatibility with other players and mod combinations has not been extensively tested
+## Source Code
+https://github.com/guillenjgg/valheim-hex-now-you-float
